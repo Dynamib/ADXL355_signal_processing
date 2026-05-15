@@ -176,6 +176,39 @@ def plot_sst_spectrogram(Tx, freqs, t, title="SST Spectrogram",
     return fig
 
 
+def plot_fft_spectrum(t, accel, filename="09_fft_spectrum.png"):
+    """FFT magnitude spectrum for each axis, with log-frequency and log-magnitude axes.
+
+    Unlike PSD (which estimates power density), this shows the raw FFT magnitude
+    |FFT(signal)| in dB, which is more intuitive for seeing individual frequency peaks.
+    """
+    fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
+    fs = CFG.FS_TARGET
+
+    for i, ax in enumerate(axes):
+        signal = accel[:, i] - accel[:, i].mean()
+        n = len(signal)
+        fft = np.fft.rfft(signal)
+        mag = np.abs(fft) / n
+        freq = np.fft.rfftfreq(n, 1 / fs)
+
+        mask = (freq >= 0.5) & (freq <= 250)
+        mag_db = 20 * np.log10(mag[mask] + 1e-20)
+
+        ax.semilogx(freq[mask], mag_db, color=colors[i], linewidth=0.5)
+        ax.set_ylabel('Magnitude (dB)')
+        ax.set_title(f'{CFG.AXIS_NAMES[i]}-axis FFT Spectrum')
+        ax.grid(True, alpha=0.3)
+        ax.set_ylim(mag_db.max() - 80, mag_db.max() + 5)
+
+    axes[-1].set_xlabel('Frequency (Hz)')
+    fig.suptitle('FFT Magnitude Spectrum (DC-removed, 3 axes)', fontsize=14)
+    fig.tight_layout()
+    _save(fig, filename)
+    return fig
+
+
 def plot_sliding_features(df, anomaly_mask=None, axis_name="X",
                           filename="07_sliding_window_features.png"):
     """Multi-panel sliding-window spectral features over time."""
