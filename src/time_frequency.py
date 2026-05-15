@@ -61,8 +61,20 @@ def compute_sst(signal, fs, nv=32, fs_sst=300.0):
         sig = resample(sig, n_target)
         fs_used = fs_sst
 
+    # Manually compute scales for frequency range 2 Hz to Nyquist
+    # GMW beta=2, gamma=3: center frequency xi ≈ sqrt(2/3)
+    xi = np.sqrt(2 / 3)  # ≈ 0.8165
+    dt = 1.0 / fs_used
+    f_min = 2.0
+    f_max = fs_used / 2
+    scale_max = xi / (f_min * dt)
+    scale_min = xi / (f_max * dt)
+    n_octaves = np.log2(scale_max / scale_min)
+    n_scales = max(32, int(n_octaves * nv))
+    scales = np.logspace(np.log10(scale_min), np.log10(scale_max), n_scales)
+
     Tx, Wx, freqs, *_ = sq.ssq_cwt(
-        sig, ('gmw', {'beta': 2}), fs=fs_used, nv=nv
+        sig, ('gmw', {'beta': 2}), fs=fs_used, scales=scales,
     )
     t = np.linspace(0, len(signal) / fs, Tx.shape[1])
     return Tx, freqs, t, Wx

@@ -30,7 +30,7 @@ STFT_NFFT = 1024
 
 # --- Step 2b: SST ---
 SST_NV = 32
-SST_FS = 300.0  # Downsample to this rate before SST (avoids 15GiB memory blowup)
+SST_FS = 200.0  # Downsample to this rate before SST (avoids memory blowup)
 
 # --- Step 3: Welch PSD ---
 WELCH_NPERSEG = 1024
